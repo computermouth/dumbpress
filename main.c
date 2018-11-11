@@ -28,22 +28,40 @@
  *   record 0xff.
 */
 
-//~ typedef enum {
-	//~ dpbyte,
-	//~ dpchunk
-//~ } unittype;
+typedef enum {
+	dpbyte,
+	dpchunk
+} unittype;
 
-//~ typedef struct dpunit {
-	//~ unittype ut;
-	//~ char *value;
-	//~ struct dpunit *next;
-//~ } dpunit;
+typedef struct {
+	unittype ut;
+	char *value;
+} dpunit;
 
-//~ dpunit dpubuf[256];
+dpunit dpubuf[256];
+int dpuhead = 0;
+int dputail = 255;
 
-//~ char cbuf[256 * 5] = { 0x00 };
-//~ char *cbuf_head = cbuf;
-//~ char *cbuf_tail = cbuf + (256 * 5 * sizeof(char));
+char cbuf[256 * 5] = { 0x00 };
+char *cbuf_head = cbuf;
+char *cbuf_tail = cbuf + (256 * 5 * sizeof(char));
+
+void add_dpu(){
+	
+	
+	
+}
+
+unsigned long djb2_hash(unsigned char *str)
+{
+    unsigned long hash = 5381;
+    int c;
+
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+
+    return hash;
+}
 
 int main(){
 	
