@@ -28,6 +28,22 @@
  *   record 0xff.
 */
 
+//~ typedef enum {
+	//~ dpbyte,
+	//~ dpchunk
+//~ } unittype;
+
+//~ typedef struct dpunit {
+	//~ unittype ut;
+	//~ char *value;
+	//~ struct dpunit *next;
+//~ } dpunit;
+
+//~ dpunit dpubuf[256];
+
+//~ char cbuf[256 * 5] = { 0x00 };
+//~ char *cbuf_head = cbuf;
+//~ char *cbuf_tail = cbuf + (256 * 5 * sizeof(char));
 
 int main(){
 	
@@ -41,13 +57,13 @@ int main(){
 	if( access(incname, R_OK) == -1) {
 		printf("E: no readable file '%s' was found\n", incname);
 		rc = 1;
-		return rc;
+		goto safe_fail;
 	}
 	
 	if( access(outname, F_OK) != -1) {
 		printf("E: file '%s' already exists\n", outname);
 		rc = 2;
-		return rc;
+		goto safe_fail;
 	}
 	
 	inc = fopen(incname, "rb");
@@ -56,7 +72,7 @@ int main(){
 	if(seekrc != 0){
 		printf("E: seek on '%s' failed\n", incname);
 		rc = seekrc;
-		return rc;
+		goto safe_fail;
 	}
 	
 	long inclen = ftell(inc);
@@ -72,7 +88,7 @@ int main(){
 	//~ if(prc == EOF){
 		//~ printf("E: failed to write to '%s'\n", outname);
 		//~ rc = prc;
-		//~ return rc;
+		//~ goto safe_fail;
 	//~ }
 	
 	short in = 256;
@@ -118,6 +134,11 @@ int main(){
 		}
 
 	}
+	
+	safe_fail:
+	
+	if (inc != NULL) fclose(inc);
+	if (out != NULL) fclose(out);
 	
 	return rc;
 }
