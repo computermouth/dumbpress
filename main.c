@@ -2,6 +2,31 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/*
+ * Stage 1: Byte Duplication Reduction
+ * 
+ * Input  - 11B
+ * +----------------------------------------------------------------------------+
+ * |    a |    b |    b |    c |    c |    c |    d |    d |    d |    d |   \n |
+ * +----------------------------------------------------------------------------+
+ * | 0x61 | 0x62 | 0x62 | 0x63 | 0x63 | 0x63 | 0x64 | 0x64 | 0x64 | 0x64 | 0x0a |
+ * +----------------------------------------------------------------------------+
+ * 
+ * Output - 14B (hooray, negative compression!)
+ * +-------------------------------------------------------------------------------------------------+
+ * |    a |    b |    b |   \0 |   \0 |   \0 |   \3 |    c |   \0 |   \0 |   \0 |   \4 |    d |   \n |
+ * +-------------------------------------------------------------------------------------------------+
+ * | 0x61 | 0x62 | 0x62 | 0x00 | 0x00 | 0x00 | 0x00 | 0x63 | 0x00 | 0x00 | 0x00 | 0x01 | 0x64 | 0x0a |
+ * +-------------------------------------------------------------------------------------------------+
+ * 
+ * Summary:
+ * 
+ *     Duplications longer than 2 bytes, are shortened to { 0, 0, 0, (count), (value)} -- where
+ *   count is a number (( x > 2 && x < 258) - 3). Given that anything less than three occurences
+ *   will not record in the { 0, 0, 0 } delimited format, recording a count starting from 3 is
+ *   a waste of capacity of the byte. So 3 occurences will record 0x00, and 258 occurences will
+ *   record 0xff.
+*/
 
 
 int main(){
@@ -9,7 +34,7 @@ int main(){
 	FILE *inc = NULL;
 	FILE *out = NULL;
 	int rc = 0;
-	char *delim = "000";
+	char delim = 0x00;
 	char *incname = "./testfile";
 	char *outname = "./testfile.dp";
 	
@@ -41,12 +66,14 @@ int main(){
 	
 	out = fopen(outname, "wb");
 	
-	int prc = fputs(delim, out);
-	if(prc == EOF){
-		printf("E: failed to write to '%s'\n", outname);
-		rc = prc;
-		return rc;
-	}
+	// PUT SOME KIND OF HEADER HERE
+	
+	//~ int prc = fputs(delim, out);
+	//~ if(prc == EOF){
+		//~ printf("E: failed to write to '%s'\n", outname);
+		//~ rc = prc;
+		//~ return rc;
+	//~ }
 	
 	short in = 256;
 	short count = 0;
@@ -61,15 +88,17 @@ int main(){
 			in = getrc;
 		} else if (getrc == in){ // matches last
 			count++;
-			if (count == 256) { // max reoccurrences
+			if (count == 258) { // max reoccurrences
 				//~ printf("MAX in: %x getrc: %x count: %x\n", in, getrc, count);
+				for (int i = 0; i < 3; i++ )
+					fputc(delim, out);
 				fputc(255, out);
 				fputc(in, out);
 				in = getrc;
 				count = 0;
 			}
 		} if (in != getrc){
-			if(count < 3){
+			if(count < 2){
 				while(count >= 0){
 					//~ printf("UNC in: %x getrc: %x count: %x\n", in, getrc, count);
 					fputc(in, out);
@@ -78,9 +107,10 @@ int main(){
 				in = getrc;
 				count = 0;
 			} else {
-				fputs(delim, out);
+				for (int i = 0; i < 3; i++ )
+					fputc(delim, out);
 				//~ printf("COM in: %x getrc: %x count: %x\n", in, getrc, count);
-				fputc(count, out);
+				fputc( (count - 2), out);
 				fputc(in, out);
 				in = getrc;
 				count = 0;
