@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 /*
- * Stage 1: Byte Duplication Reduction
+ * Stage 000: Byte Duplication Reduction
  * 
  * Input  - 11B
  * +----------------------------------------------------------------------------+
@@ -18,6 +18,56 @@
  * +-------------------------------------------------------------------------------------------------+
  * | 0x61 | 0x62 | 0x62 | 0x00 | 0x00 | 0x00 | 0x00 | 0x63 | 0x00 | 0x00 | 0x00 | 0x01 | 0x64 | 0x0a |
  * +-------------------------------------------------------------------------------------------------+
+ * 
+ * 
+ * Additional stages:
+ * 
+ *    - 111: pointer (minimum 5/6 repeating chars)
+ *      input : { 0x00, 0x00, 0xa9, 0x01, 0x07, 0x03, 0x00, 0x00, 0xa9, 0x01, 0x07 }
+ *      output: { 0x00, 0x00, 0xa9, 0x01, 0x07, 0x03, 0x01, 0x01, 0x01, 0x00, 0x00 }
+ *   
+ *                                      delim         ^--------------^
+ *                                      bytes before delim start - 5/6? ^--^
+ *                                      len of repetition - 5/6?              ^--^
+ *   
+ *    - 222: diff pattern (minimum 6/7 repeating chars)
+ *      input : { 0x00, 0x01, 0x03, 0x06, 0x0a, 0x0f, 0x00, 0x00, \
+ *                0x01, 0x02, 0x04, 0x07, 0x0b, 0x10, 0x05, 0x07 }
+ *      output: { 0x00, 0x01, 0x03, 0x06, 0x0a, 0x0f, 0x00, 0x00, \
+ *                0x02, 0x02, 0x02, 0x03, 0x00, 0x01, 0x05, 0x07 }
+ *   
+ *  delim         ^--------------^
+ *  bytes before delim start - 6/7? ^--^
+ *  len of repetition - 6/7?              ^--^
+ *  origin byte (buffer[i - len_of_rep])        ^--^
+ *   
+ *    - 444 - 888 : ( <<, >>, |, &, ^ ) pattern (minimum 6/7 repeating chars)
+ *              or make 222, with a type indicator and 7/8 minimum
+ * 
+ *    - 333: bit rotate pattern (minimum 6/7 repeating chars)
+ *           or make 222, with a type indicator and 7/8 minimum
+ * 
+ * #define INT_BITS 8
+ *   
+ * // Function to left rotate n by d bits
+ * unsigned char leftRotate(unsigned char n, unsigned char d) 
+ * { 
+ *    // In n<<d, last d bits are 0. To put first 3 bits of n at  
+ *    // last, do bitwise or of n<<d with n >>(INT_BITS - d)
+ *    return (n << d)|(n >> (INT_BITS - d)); 
+ * } 
+ *   
+ * // Function to right rotate n by d bits
+ * unsigned char rightRotate(unsigned char n, unsigned char d) 
+ * { 
+ *    // In n>>d, first d bits are 0. To put last 3 bits of at  
+ *    // first, do bitwise or of n>>d with n <<(INT_BITS - d)
+ *    return (n >> d)|(n << (INT_BITS - d)); 
+ * } 
+ *   
+ *    - 999 : mod pattern (minimum 6/7 repeating chars)
+ *              or make 222, with a type indicator and 7/8 minimum
+ * 
  * 
  * Summary:
  * 
@@ -131,7 +181,9 @@ int main(){
 				in = getrc;
 				count = 0;
 			}
-		} if (in != getrc){
+		}
+		
+		if (in != getrc){
 			if(count < 2){
 				while(count >= 0){
 					//~ printf("UNC in: %x getrc: %x count: %x\n", in, getrc, count);
