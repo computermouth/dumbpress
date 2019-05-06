@@ -4,6 +4,6 @@
 
 #include "util.h"
 
-unit dupe(short buf[256]);
+unit dupe(short buf[BUFLEN]);
 
 #endif
