@@ -1,5 +1,7 @@
 main
-main.o
 a.out
 testfile.dp
 testfile
+dumbpress
+test/*.dp
+*.o
