@@ -4,8 +4,10 @@
 
 #define DP_EOB 256
 #define DP_EOF 257
-
+#define DELLEN 2
 #define BUFLEN 20
+#define MODLEN 256
+#define AUTOPOS -1
 
 typedef struct {
 	unsigned char consumed;

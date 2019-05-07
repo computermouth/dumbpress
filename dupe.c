@@ -6,14 +6,6 @@
 unit dupe(short buf[BUFLEN]){
 	printf("B: dupe\n");
 	
-	unit miss = { 
-		.consumed = 0,
-		.consumed_at = 0,
-		.delim = 0x00,
-		.payload = { 0x00 },
-		.payload_used = 0,
-	};
-	
 	unit hit = { 
 		.consumed = 0,
 		.consumed_at = 0,
@@ -29,7 +21,7 @@ unit dupe(short buf[BUFLEN]){
 	for(int i = 0; i < BUFLEN - 1; i++){
 		if(buf[i] == DP_EOB){
 			printf("E: this shouldn't happen\n");
-			return miss;
+			return hit;
 		}
 		if(buf[i] == DP_EOF){
 			printf("I: dupe reached EOF\n");
