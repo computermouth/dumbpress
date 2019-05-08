@@ -9,7 +9,6 @@ unit dupe(short buf[BUFLEN]){
 	unit hit = { 
 		.consumed = 0,
 		.consumed_at = 0,
-		.delim = 0x00,
 		.payload = { 0x00 },
 		.payload_used = 2,
 	};

@@ -1,7 +1,7 @@
 
 MAIN_NAME = dumbpress
 
-SRC = main.c process.c dupe.c
+SRC = main.c process.c dupe.c add_const.c add_pattern.h
 FLAGS = -Wall -pedantic -std=c99
 LIBS = 
 

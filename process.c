@@ -7,6 +7,8 @@
 #include "util.h"
 
 #include "dupe.h"
+#include "add_const.h"
+#include "add_pattern.h"
 
 typedef enum {
 	BUF,
@@ -22,9 +24,10 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe, .args = BUF }, // required
-	{ AUTOPOS, 7, .func = (void (*)())dupe, .args = BUF },
-	{ 128,   128, .func = (void (*)())dupe, .args = BUF_IND },
+	//~ { AUTOPOS, 1, .func = (void (*)())dupe, .args = BUF }, // required
+	{ AUTOPOS, 1, .func = (void (*)())add_const, .args = BUF },
+	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
+	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
 
 int fill_buffer(short buf[BUFLEN], FILE * inc){
@@ -137,34 +140,44 @@ int process(FILE * inc, FILE * out){
 			
 		}
 		
-		// deleteme
-		units[1].consumed = units[0].consumed;
+		// find most compressed unit
+		int best = 0;
+		for(int i = 0; i < MODLEN; i++){
+			if(units[i].consumed > best)
+				best = i;
+		}
 		
-		unit dupe_unit = dupe(buf);
-		if(dupe_unit.consumed > 0){
+		unit best_unit = units[best];
+		if(best_unit.consumed > 0){
 			// TODO: write out everything before `consumed_at`
-			outlen += dupe_unit.consumed_at;
+			outlen += best_unit.consumed_at;
 			
 			// TODO: write out new chunk
-			printf("%d%d%d%c\n", dupe_unit.delim, dupe_unit.delim, dupe_unit.payload[0], dupe_unit.payload[1]);
-			outlen += DELLEN + 2;
+			printf("%3x%3x", best, best);
+			for(int i = 0; i < best_unit.payload_used; i++){
+				printf("%3x", best_unit.payload[i]);
+			}
+			printf("\n");
+			
+			printf("%d%d%d%c\n", best, best, best_unit.payload[0], best_unit.payload[1]);
+			outlen += DELLEN + best_unit.payload_used;
 			
 			printf("outlen: %lu\n", outlen);
 			
 			// make room in buffer
 			void *rc = NULL;
-			//~ printf("memmove: %ld to %ld for %ld\n", buf+dupe_unit.consumed+dupe_unit.consumed_at, buf, BUFLEN - ( dupe_unit.consumed + dupe_unit.consumed_at) );
-			//~ printf("memmove: buf[%d]: %c\n", dupe_unit.consumed+dupe_unit.consumed_at, buf[dupe_unit.consumed+dupe_unit.consumed_at] );
-			//~ printf("memmove: %d\n", (BUFLEN - 1) - ( dupe_unit.consumed + dupe_unit.consumed_at) );
-			//~ rc = memmove(buf, buf+dupe_unit.consumed+dupe_unit.consumed_at, BUFLEN - ( dupe_unit.consumed + dupe_unit.consumed_at) );
-			rc = memmove(buf, buf+dupe_unit.consumed+dupe_unit.consumed_at, sizeof(short) * (BUFLEN - 1) - ( dupe_unit.consumed + dupe_unit.consumed_at) );
+			//~ printf("memmove: %ld to %ld for %ld\n", buf+best_unit.consumed+best_unit.consumed_at, buf, BUFLEN - ( best_unit.consumed + best_unit.consumed_at) );
+			//~ printf("memmove: buf[%d]: %c\n", best_unit.consumed+best_unit.consumed_at, buf[best_unit.consumed+best_unit.consumed_at] );
+			//~ printf("memmove: %d\n", (BUFLEN - 1) - ( best_unit.consumed + best_unit.consumed_at) );
+			//~ rc = memmove(buf, buf+best_unit.consumed+best_unit.consumed_at, BUFLEN - ( best_unit.consumed + best_unit.consumed_at) );
+			rc = memmove(buf, buf+best_unit.consumed+best_unit.consumed_at, sizeof(short) * (BUFLEN - 1) - ( best_unit.consumed + best_unit.consumed_at) );
 			if (rc != buf){
 				printf("E: couldn't memmove after dupe\n");
 				return 1;
 			}
 			
 			// set new EOB
-			int new_eob = BUFLEN - ((buf + dupe_unit.consumed + dupe_unit.consumed_at) - buf);
+			int new_eob = BUFLEN - ((buf + best_unit.consumed + best_unit.consumed_at) - buf);
 			printf("I: new EOB - %d\n", new_eob);
 			buf[new_eob] = DP_EOB;
 			
