@@ -152,7 +152,11 @@ int process(FILE * inc, FILE * out){
 				best = i;
 		}
 		
+		// TODO: best = consumed - len(outstring)
 		unit best_unit = units[best];
+		if(units[best].consumed == units[0].consumed)
+			best_unit = units[0];
+		
 		int consume = 1;
 		int outbytes = 1;
 		
