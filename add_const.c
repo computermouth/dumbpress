@@ -36,8 +36,8 @@ unit add_const(short buf[BUFLEN]){
 	}
 	
 	if (len < 2){ // no dupes
-		return hit;
 		printf("what?\n");
+		return hit;
 	}
 
 	hit.consumed = len + 1;

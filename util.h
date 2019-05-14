@@ -15,4 +15,6 @@ typedef struct {
 	unsigned char payload_used;
 } unit;
 
+unsigned char rotate_u8_left(int bits, char num);
+
 #endif

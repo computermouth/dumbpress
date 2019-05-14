@@ -10,7 +10,6 @@ unit add_pattern(short buf[BUFLEN]){
 	
 	unit hit = { 
 		.consumed = 0,
-		.consumed_at = 0,
 		.payload = { 0x00 },
 		.payload_used = 3,
 	};
@@ -60,7 +59,6 @@ unit add_pattern(short buf[BUFLEN]){
 	}
 	
 	hit.consumed = len;
-	hit.consumed_at = origin;
 	hit.payload[0] = len;
 	hit.payload[1] = val;
 	

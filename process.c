@@ -8,6 +8,7 @@
 
 #include "dupe.h"
 #include "add_const.h"
+#include "rleft_const.h"
 #include "add_pattern.h"
 
 typedef enum {
@@ -24,8 +25,9 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe, .args = BUF }, // required
-	{ AUTOPOS, 1, .func = (void (*)())add_const, .args = BUF },
+	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF }, // required
+	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF },
+	{ AUTOPOS, 1, .func = (void (*)())rleft_const, .args = BUF },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
@@ -115,7 +117,7 @@ int process(FILE * inc, FILE * out){
 			if(buf[i] > 255)
 				break;
 			
-			printf("%c", buf[i]);
+			printf("%x ", buf[i]);
 		}
 		printf("\n");
 		
@@ -193,7 +195,7 @@ int process(FILE * inc, FILE * out){
 			if(buf[i] > 255)
 				break;
 			
-			printf("%c", buf[i]);
+			printf("%x ", buf[i]);
 		}
 		printf("\n");
 		
