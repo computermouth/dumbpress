@@ -24,13 +24,15 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	//~ { AUTOPOS, 1, .func = (void (*)())dupe, .args = BUF }, // required
+	{ AUTOPOS, 1, .func = (void (*)())dupe, .args = BUF }, // required
 	{ AUTOPOS, 1, .func = (void (*)())add_const, .args = BUF },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
 
 int fill_buffer(short buf[BUFLEN], FILE * inc){
+	
+	printf("fb-start\n");
 	
 	int eob_pos;
 	int eof_pos = -1;
@@ -41,6 +43,7 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 			return eof_pos;
 		}
 		if(buf[i] == DP_EOB){ // start filling at i
+			printf("howdy: %d\n", i);
 			if( i == BUFLEN - 1)
 				return eof_pos; // already full
 			eob_pos = i;
@@ -60,7 +63,8 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 			buf[i] = getrc;
 		}
 	}
-	printf("\n");
+	
+	printf("fb-end\n");
 	
 	return eof_pos;
 }
@@ -94,14 +98,13 @@ int process(FILE * inc, FILE * out){
 	
 	short buf[BUFLEN] = { 0 };
 	buf[0] = DP_EOB;
-	buf[BUFLEN - 1] = DP_EOB;
 	
 	flist f_ops[MODLEN] = { 0 };
 	int rc = init_fops(f_ops);
 	if (rc != 0)
 		return rc;
 	
-	int eof_pos = fill_buffer(buf, inc);
+	fill_buffer(buf, inc);
 	
 	// consume until all but EOF have been processed and written out
 	while(buf[0] != DP_EOF){
@@ -148,9 +151,11 @@ int process(FILE * inc, FILE * out){
 		}
 		
 		unit best_unit = units[best];
+		int consume = 1;
+		int outbytes = 1;
+		
 		if(best_unit.consumed > 0){
-			// TODO: write out everything before `consumed_at`
-			outlen += best_unit.consumed_at;
+			consume = best_unit.consumed;
 			
 			// TODO: write out new chunk
 			printf("%3x%3x", best, best);
@@ -159,68 +164,39 @@ int process(FILE * inc, FILE * out){
 			}
 			printf("\n");
 			
-			printf("%d%d%d%c\n", best, best, best_unit.payload[0], best_unit.payload[1]);
-			outlen += DELLEN + best_unit.payload_used;
-			
-			printf("outlen: %lu\n", outlen);
-			
-			// make room in buffer
-			void *rc = NULL;
-			//~ printf("memmove: %ld to %ld for %ld\n", buf+best_unit.consumed+best_unit.consumed_at, buf, BUFLEN - ( best_unit.consumed + best_unit.consumed_at) );
-			//~ printf("memmove: buf[%d]: %c\n", best_unit.consumed+best_unit.consumed_at, buf[best_unit.consumed+best_unit.consumed_at] );
-			//~ printf("memmove: %d\n", (BUFLEN - 1) - ( best_unit.consumed + best_unit.consumed_at) );
-			//~ rc = memmove(buf, buf+best_unit.consumed+best_unit.consumed_at, BUFLEN - ( best_unit.consumed + best_unit.consumed_at) );
-			rc = memmove(buf, buf+best_unit.consumed+best_unit.consumed_at, sizeof(short) * (BUFLEN - 1) - ( best_unit.consumed + best_unit.consumed_at) );
-			if (rc != buf){
-				printf("E: couldn't memmove after dupe\n");
-				return 1;
-			}
-			
-			// set new EOB
-			int new_eob = BUFLEN - ((buf + best_unit.consumed + best_unit.consumed_at) - buf);
-			printf("I: new EOB - %d\n", new_eob);
-			buf[new_eob] = DP_EOB;
-			
-			// refill buffer
-			eof_pos = fill_buffer(buf, inc);
-			
-			// print new buffer
-			printf("boi: ");
-			for(int i = 0; i < BUFLEN; i++){
-				if(buf[i] > 255)
-					break;
-				
-				printf("%c", buf[i]);
-			}
-			printf("\n");
-				
-		} else {
-			
-			if(eof_pos != -1){
-				// TODO: write out the rest of the buffer
-				outlen += eof_pos;
-				
-				break; // file complete
-			} else {
-				// set to refill entire buffer
-				buf[0] = DP_EOB;
-				eof_pos = fill_buffer(buf, inc);
-				outlen += BUFLEN;
-			}
-			
-			// print buffer
-			printf("bon: ");
-			for(int i = 0; i < BUFLEN; i++){
-				if(buf[i] > 255)
-					break;
-				
-				printf("%c", buf[i]);
-			}
-			printf("\n");
-			
+			outbytes =  DELLEN + best_unit.payload_used;
 		}
 		
-		//~ break;
+		outlen += outbytes;
+		
+		printf("outlen: %lu\n", outlen);
+		
+		// make room in buffer
+		void *rc = NULL;
+		rc = memmove(buf, buf+consume, sizeof(short) * (BUFLEN - consume) );
+		if (rc != buf){
+			printf("E: couldn't memmove after dupe\n");
+			return 1;
+		}
+		
+		// set new EOB
+		int new_eob = BUFLEN - ((buf + consume) - buf);
+		printf("I: new EOB - %d\n", new_eob);
+		buf[new_eob] = DP_EOB;
+		
+		// refill buffer
+		fill_buffer(buf, inc);
+		
+		// print new buffer
+		printf("boi: ");
+		for(int i = 0; i < BUFLEN; i++){
+			if(buf[i] > 255)
+				break;
+			
+			printf("%c", buf[i]);
+		}
+		printf("\n");
+		
 	}
 	
 	printf("I: outlen -- %luB\n", outlen);
