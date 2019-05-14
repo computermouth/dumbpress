@@ -1,13 +1,21 @@
 
-MAIN_NAME = dumbpress
+MAIN_NAME := dumbpress
 
-SRC = main.c process.c dupe.c add_const.c util.c rleft_const.c add_pattern.c
-FLAGS = -Wall -pedantic -std=c99
-LIBS = 
+SRC := main.c process.c dupe.c add_const.c util.c rleft_const.c add_pattern.c
+FLAGS := -Wall -pedantic -std=c99
+LIBS :=
+
+PAR=0
 
 .PHONY: all $(MAIN_NAME) lint
 
-all: lint $(MAIN_NAME)
+all: lint par $(MAIN_NAME)
+
+par:
+ifeq ($(PAR),1)
+FLAGS := $(FLAGS) -fopenmp
+LIBS := $(LIBS) -lgomp
+endif
 
 $(MAIN_NAME):
 	gcc $(SRC) $(FLAGS) -o $(MAIN_NAME) $(LIBS)
