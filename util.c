@@ -1,10 +1,10 @@
 
 #include "util.h"
 
-unsigned char rotate_u8_left(int bits, char num){
+unsigned char rotate_u8_left(int bits, unsigned char num){
 	
 	for(int i = 0; i < bits; i++)
-		num = ((num >> 1) | ((num & 1) << 7));
+		num = (num >> 1) | (num << 7);
 	
 	return num;
 }

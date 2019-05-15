@@ -27,9 +27,9 @@ unit dupe(short buf[BUFLEN]){
 	hit.payload[0] = len;
 	hit.payload[1] = val;
 	
-	printf("I: dupecon -> %d\n", len);
-	printf("I: dupelen -> %d\n", len);
-	printf("I: dupeval -> %c\n", val);
+	printf("I: dupe_consume -> %d\n", len);
+	printf("I: dupe_length  -> %d\n", len);
+	printf("I: dupe_value   -> %c\n", val);
 	
 	return hit;
 }

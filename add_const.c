@@ -35,20 +35,21 @@ unit add_const(short buf[BUFLEN]){
 		len++;
 	}
 	
-	if (len < 2){ // no dupes
-		printf("what?\n");
+	len++; // this algorithm's shit
+	
+	if (len < DELLEN + hit.payload_used){ // doesn't save space
 		return hit;
 	}
 
-	hit.consumed = len + 1;
+	hit.consumed = len;
 	hit.payload[0] = diff;
 	hit.payload[1] = hit.consumed;
 	hit.payload[2] = val;
 	
-	printf("I: add_const_con -> %d\n", hit.consumed);
-	printf("I: add_const_diff -> %d\n", diff);
-	printf("I: add_const_len -> %d\n", hit.consumed);
-	printf("I: add_const_val -> %c\n", val);
+	printf("I: add_const_consume -> %d\n", hit.consumed);
+	printf("I: add_const_diff    -> %d\n", diff);
+	printf("I: add_const_length  -> %d\n", hit.consumed);
+	printf("I: add_const_value   -> %c\n", val);
 	
 	return hit;
 }

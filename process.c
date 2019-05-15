@@ -21,13 +21,14 @@ typedef struct {
 	short len;
 	void (*func)();
 	mode args;
+	short index;
 } flist;
 
 // input to generate dispatch table
 flist ops[] = {
 	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF }, // required
 	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF },
-	{ AUTOPOS, 1, .func = (void (*)())rleft_const, .args = BUF },
+	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
@@ -87,6 +88,7 @@ int init_fops(flist *f){
 			}
 			
 			f[j] = ops[i];
+			f[j].index = j - start;
 			printf("I: inserting ops[%d] at f[%d]\n", i, j);
 		}
 	}
@@ -123,7 +125,10 @@ int process(FILE * inc, FILE * out){
 		
 		unit units[MODLEN] = { 0 };
 		unit (*buf_func)(short *) = NULL;
+		unit (*buf_ind_func)(short *, short) = NULL;
+		int failure = 0;
 		
+		#pragma omp parallel for
 		for(int i = 0; i < MODLEN; i++){
 			
 			if(f_ops[i].func == NULL)
@@ -135,15 +140,18 @@ int process(FILE * inc, FILE * out){
 					units[i] = buf_func(buf);
 					break;
 				case BUF_IND:
-					buf_func = (unit (*)(short *))f_ops[i].func;
-					//~ units[i] = buf_func(buf, i);
+					buf_ind_func = (unit (*)(short *, short))f_ops[i].func;
+					printf("buf_ind_func(buf, %d)\n", f_ops[i].index);
+					units[i] = buf_ind_func(buf, f_ops[i].index);
 					break;
 				default:
 					printf("E: unknown f_ops.args %d\n", f_ops[i].args);
-					return 1;
+					failure = 1;
 			}
-			
 		}
+		
+		if(failure)
+			return failure;
 		
 		// find most compressed unit
 		int best = 0;

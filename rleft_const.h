@@ -4,6 +4,6 @@
 
 #include "util.h"
 
-unit rleft_const(short buf[BUFLEN]);
+unit rleft_const(short buf[BUFLEN], short index);
 
 #endif
