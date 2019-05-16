@@ -6,6 +6,7 @@
 
 #include "process.h"
 #include "util.h"
+#include "log.h"
 
 #include "dupe.h"
 #include "add_const.h"
@@ -36,18 +37,19 @@ flist ops[] = {
 
 int fill_buffer(short buf[BUFLEN], FILE * inc){
 	
-	printf("fb-start\n");
+	log_debug("fb-start");
 	
 	int eob_pos = -1;
 	int eof_pos = -1;
 	
 	for(int i = 0; i < BUFLEN; i++){
 		if(buf[i] == DP_EOF){ // nothing left to fill from
+			log_debug("nothing to refill");
 			eof_pos = i;
 			return eof_pos;
 		}
 		if(buf[i] == DP_EOB){ // start filling at i
-			printf("howdy: %d\n", i);
+			log_debug("refill buffer at %d", i);
 			if( i == BUFLEN - 1)
 				return eof_pos; // already full
 			eob_pos = i;
@@ -56,11 +58,11 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 	}
 	
 	if(eob_pos == -1){
-		printf("eob_pos was not set, abort abort!");
+		log_error("eob_pos was not set, abort abort!");
 		exit(eob_pos);
 	}
 	
-	printf("eob_pos: %d\n", eob_pos);
+	log_debug("eob_pos: %d", eob_pos);
 	
 	for(int i = eob_pos; i < BUFLEN; i++){
 		int getrc = fgetc(inc);
@@ -73,7 +75,7 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 		}
 	}
 	
-	printf("fb-end\n");
+	log_debug("fb-end");
 	
 	return eof_pos;
 }
@@ -89,13 +91,13 @@ int init_fops(flist *f){
 		
 		for(int j = start; j < start + ops[i].len; j++){
 			if ( f[j].func != NULL ){
-				printf("E: failed to insert ops[%d] at f[%d], as something's already there", i, ops[i].pos);
+				log_error("failed to insert ops[%d] at f[%d], as something's already there", i, ops[i].pos);
 				return 1;
 			}
 			
 			f[j] = ops[i];
 			f[j].index = j - start;
-			printf("I: inserting ops[%d] at f[%d]\n", i, j);
+			log_debug("inserting ops[%d] at f[%d]", i, j);
 		}
 	}
 	
@@ -120,14 +122,16 @@ int process(FILE * inc, FILE * out){
 	while(buf[0] != DP_EOF){
 		
 		// debug
-		printf("buf: ");
-		for(int i = 0; i < BUFLEN; i++){
-			if(buf[i] > 255)
-				break;
-			
-			printf("%x ", buf[i]);
+		if(log_get_level() <= LOG_DEBUG){
+			printf("buf: ");
+			for(int i = 0; i < BUFLEN; i++){
+				if(buf[i] > 255)
+					break;
+				
+				printf("%x ", buf[i]);
+			}
+			printf("\n");
 		}
-		printf("\n");
 		
 		unit units[MODLEN] = { 0 };
 		unit (*buf_func)(short *) = NULL;
@@ -147,11 +151,10 @@ int process(FILE * inc, FILE * out){
 					break;
 				case BUF_IND:
 					buf_ind_func = (unit (*)(short *, short))f_ops[i].func;
-					printf("buf_ind_func(buf, %d)\n", f_ops[i].index);
 					units[i] = buf_ind_func(buf, f_ops[i].index);
 					break;
 				default:
-					printf("E: unknown f_ops.args %d\n", f_ops[i].args);
+					log_error("unknown f_ops.args %d", f_ops[i].args);
 					failure = 1;
 			}
 		}
@@ -178,17 +181,20 @@ int process(FILE * inc, FILE * out){
 			consume = best_unit.consumed;
 			
 			// TODO: write out new chunk
-			
-			for(int i = 0; i < DELLEN; i++){
-				fputc(best, out);
-				printf("%3x", best);
+			if(log_get_level() <= LOG_DEBUG){
+				printf("out:");
+				
+				for(int i = 0; i < DELLEN; i++){
+					fputc(best, out);
+					printf("%3x", best);
+				}
+				
+				for(int i = 0; i < best_unit.payload_used; i++){
+					fputc(best_unit.payload[i], out);
+					printf("%3x", best_unit.payload[i]);
+				}
+				printf("\n");
 			}
-			
-			for(int i = 0; i < best_unit.payload_used; i++){
-				fputc(best_unit.payload[i], out);
-				printf("%3x", best_unit.payload[i]);
-			}
-			printf("\n");
 			
 			outbytes =  DELLEN + best_unit.payload_used;
 		} else {
@@ -197,37 +203,47 @@ int process(FILE * inc, FILE * out){
 		
 		outlen += outbytes;
 		
-		printf("outlen: %lu\n", outlen);
+		// big file prog
+		//~ static int deleteme = 0;
+		//~ deleteme += outbytes;
+		//~ if(deleteme > 1000000){
+			//~ deleteme %= 1000000;
+			//~ log_info("outlen: %lu\n", outlen);
+		//~ }
+		
+		log_debug("outlen: %lu", outlen);
 		
 		// make room in buffer
 		void *rc = NULL;
 		rc = memmove(buf, buf+consume, sizeof(short) * (BUFLEN - consume) );
 		if (rc != buf){
-			printf("E: couldn't memmove after dupe\n");
+			log_error("couldn't memmove after dupe");
 			return 1;
 		}
 		
 		// set new EOB
 		int new_eob = BUFLEN - ((buf + consume) - buf);
-		printf("I: new EOB - %d\n", new_eob);
+		log_debug("new EOB - %d", new_eob);
 		buf[new_eob] = DP_EOB;
 		
 		// refill buffer
 		fill_buffer(buf, inc);
 		
 		// print new buffer
-		printf("boi: ");
-		for(int i = 0; i < BUFLEN; i++){
-			if(buf[i] > 255)
-				break;
-			
-			printf("%x ", buf[i]);
+		if(log_get_level() <= LOG_DEBUG){
+			printf("buf: ");
+			for(int i = 0; i < BUFLEN; i++){
+				if(buf[i] > 255)
+					break;
+				
+				printf("%x ", buf[i]);
+			}
+			printf("\n");
 		}
-		printf("\n");
 		
 	}
 	
-	printf("I: outlen -- %luB\n", outlen);
+	log_info("I: outlen -- %luB", outlen);
 	
 	return 0;
 }

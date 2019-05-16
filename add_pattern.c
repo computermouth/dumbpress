@@ -6,7 +6,7 @@
 #include "add_pattern.h"
 
 unit add_pattern(short buf[BUFLEN]){
-	printf("B: add_pattern\n");
+	// printf("B: add_pattern\n");
 	
 	unit hit = { 
 		.consumed = 0,
@@ -24,11 +24,11 @@ unit add_pattern(short buf[BUFLEN]){
 	// and so 10 bytes are the minimum
 	for(int i = 0; i < 2 * (DELLEN + hit.payload_used); i++){
 		if(buf[i] == DP_EOB){
-			printf("E: this shouldn't happen\n");
+			// printf("E: this shouldn't happen\n");
 			return hit;
 		}
 		if(buf[i] == DP_EOF){
-			printf("I: add_const reached EOF\n");
+			// printf("I: add_const reached EOF\n");
 			return hit;
 		}
 	}
@@ -44,15 +44,15 @@ unit add_pattern(short buf[BUFLEN]){
 		
 		for(int j = i + min; j < BUFLEN - 1 - min; j++){
 			if(buf[i] == DP_EOB){
-				printf("E: this shouldn't happen\n");
+				// printf("E: this shouldn't happen\n");
 				return hit;
 			}
 			if(buf[i] == DP_EOF){
-				printf("I: add_const reached EOF\n");
+				// printf("I: add_const reached EOF\n");
 				break;
 			}
 			
-			printf("i: %d\nj: %d\n", i, j);
+			// printf("i: %d\nj: %d\n", i, j);
 			break;
 		}
 		
@@ -62,10 +62,10 @@ unit add_pattern(short buf[BUFLEN]){
 	hit.payload[0] = len;
 	hit.payload[1] = val;
 	
-	printf("I: add_const_con -> %d\n", len);
-	printf("I: add_const_cat -> %d\n", origin);
-	printf("I: add_const_len -> %d\n", len);
-	printf("I: add_const_val -> %c\n", val);
+	// printf("I: add_const_con -> %d\n", len);
+	// printf("I: add_const_cat -> %d\n", origin);
+	// printf("I: add_const_len -> %d\n", len);
+	// printf("I: add_const_val -> %c\n", val);
 	
 	return hit;
 }

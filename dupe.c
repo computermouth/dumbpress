@@ -1,10 +1,12 @@
 
 #include <stdio.h>
 
+#include "log.h"
+
 #include "dupe.h"
 
 unit dupe(short buf[BUFLEN]){
-	printf("B: dupe\n");
+	log_trace("dupe");
 	
 	unit hit = { 
 		.consumed = 0,
@@ -16,7 +18,7 @@ unit dupe(short buf[BUFLEN]){
 	int val = buf[0];
 	
 	while(len < BUFLEN && buf[len] == val && buf[len] != DP_EOF){ // start counting dupes
-		printf("%d\n", len);
+		log_trace("len -- %03d", len);
 		len++;
 	}
 	
@@ -27,9 +29,9 @@ unit dupe(short buf[BUFLEN]){
 	hit.payload[0] = len;
 	hit.payload[1] = val;
 	
-	printf("I: dupe_consume -> %d\n", len);
-	printf("I: dupe_length  -> %d\n", len);
-	printf("I: dupe_value   -> %c\n", val);
+	log_trace("dupe_consume -> %d", len);
+	log_trace("dupe_length  -> %d", len);
+	log_trace("dupe_value   -> %c", val);
 	
 	return hit;
 }

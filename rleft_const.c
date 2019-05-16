@@ -3,10 +3,12 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "log.h"
+
 #include "rleft_const.h"
 
 unit rleft_const(short buf[BUFLEN], short index){
-	printf("B: rleft_const\n");
+	log_trace("B: rleft_const");
 	
 	// 0 - 6 -> 1 - 7
 	index++;
@@ -22,19 +24,18 @@ unit rleft_const(short buf[BUFLEN], short index){
 	int val = buf[0];
 	
 	if(buf[0] == DP_EOB){
-		printf("E: this shouldn't happen\n");
+		log_error("this shouldn't happen");
 		return hit;
 	}
 	if(buf[0] == DP_EOF || buf[1] == DP_EOF){
-		printf("I: rleft_const reached EOF\n");
+		log_trace("rleft_const reached EOF");
 		return hit;
 	}
 	
-	printf("shift: %d\n", shift);
+	log_trace("shift: %d", shift);
 	
 	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len] == rotate_u8_left(shift, buf[len + 1]) ){ // start counting dupes
-		printf("I: compare: %x -- %x\n", buf[len], buf[len+1]);
-		printf("I: rleft_const\n");
+		log_trace("len:com:par: %03d:%02x:%02x", len, buf[len], buf[len+1]);
 		len++;
 	}
 	
@@ -49,10 +50,10 @@ unit rleft_const(short buf[BUFLEN], short index){
 	hit.payload[1] = len;
 	hit.payload[2] = val;
 	
-	printf("I: rleft_const_consume -> %d\n", hit.consumed);
-	printf("I: rleft_const_shift   -> %d\n", shift);
-	printf("I: rleft_const_length  -> %d\n", hit.consumed);
-	printf("I: rleft_const_value   -> %x\n", val);
+	log_trace("rleft_const_consume -> %d", hit.consumed);
+	log_trace("rleft_const_shift   -> %d", shift);
+	log_trace("rleft_const_length  -> %d", hit.consumed);
+	log_trace("rleft_const_value   -> %x", val);
 	
 	return hit;
 }
