@@ -20,7 +20,7 @@ unit dupe(short buf[BUFLEN]){
 		len++;
 	}
 	
-	if (len < 2) // no dupes
+	if (len < DELLEN) // no dupes
 		return hit;
 	
 	hit.consumed = len;
