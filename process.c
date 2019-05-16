@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "process.h"
 #include "util.h"
@@ -37,7 +38,7 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 	
 	printf("fb-start\n");
 	
-	int eob_pos;
+	int eob_pos = -1;
 	int eof_pos = -1;
 	
 	for(int i = 0; i < BUFLEN; i++){
@@ -52,6 +53,11 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 			eob_pos = i;
 			break; // quit at first EOB, because there's always one at the end
 		}
+	}
+	
+	if(eob_pos == -1){
+		printf("eob_pos was not set, abort abort!");
+		exit(eob_pos);
 	}
 	
 	printf("eob_pos: %d\n", eob_pos);
@@ -172,13 +178,21 @@ int process(FILE * inc, FILE * out){
 			consume = best_unit.consumed;
 			
 			// TODO: write out new chunk
-			printf("%3x%3x", best, best);
+			
+			for(int i = 0; i < DELLEN; i++){
+				fputc(best, out);
+				printf("%3x", best);
+			}
+			
 			for(int i = 0; i < best_unit.payload_used; i++){
+				fputc(best_unit.payload[i], out);
 				printf("%3x", best_unit.payload[i]);
 			}
 			printf("\n");
 			
 			outbytes =  DELLEN + best_unit.payload_used;
+		} else {
+			fputc(buf[0], out);
 		}
 		
 		outlen += outbytes;
