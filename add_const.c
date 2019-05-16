@@ -48,10 +48,10 @@ unit add_const(short buf[BUFLEN]){
 	hit.payload[1] = hit.consumed;
 	hit.payload[2] = val;
 	
-	log_trace("I: add_const_consume -> %d", hit.consumed);
-	log_trace("I: add_const_diff    -> %d", diff);
-	log_trace("I: add_const_length  -> %d", hit.consumed);
-	log_trace("I: add_const_value   -> %c", val);
+	log_trace("add_const_consume -> %d", hit.consumed);
+	log_trace("add_const_diff    -> %d", diff);
+	log_trace("add_const_length  -> %d", hit.consumed);
+	log_trace("add_const_value   -> %c", val);
 	
 	return hit;
 }

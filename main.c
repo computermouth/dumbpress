@@ -10,10 +10,27 @@
 #include "process.h"
 #include "log.h"
 
+char *suffix = ".dp";
+
 void usage(char * bin){
-	log_info("usage:\n");
-	log_info("  %s [-f] /path/to/input/file\n", bin);
-	log_info("  output file name is `s// printf(\"%%s.dp\", input_file)`\n");
+	log_info("usage:");
+	log_info("  %s [-fvvsh] [-i input] [-o output] [/path/to/input/file]", bin);
+	log_info(NULL);
+	log_info("  -f --force   force overwrite of output file", bin);
+	log_info("  -v --verbose increase stdout volume, use up to 2x", bin);
+	log_info("  -s --silent  no output");
+	log_info(NULL);
+	log_info("  default output file name is 'sprintf(\"%%s%s\", input_file)'", suffix);
+	log_info(NULL);
+	log_info("  %s                          compress stdin, write to stdout", bin);
+	log_info("  %s somefile                 compress somefile, write to somefile%s", bin, suffix);
+	log_info("  %s -o outfile somefile      compress somefile, write to outfile", bin);
+	log_info("  %s -o outfile -i somefile   same as above", bin);
+	log_info(NULL);
+	log_info("  %s -x                       extract stdin, write to stdout", bin);
+	log_info("  %s -x somefile%s            extract somefile%s, write to somefile", bin, suffix, suffix);
+	log_info("  %s -o outfile somefile%s    extract somefile%s, write to outfile", bin, suffix, suffix);
+	log_info("  %s -o outfile -i somefile%s same as above", bin, suffix);
 }
 
 int main(int argc, char * argv[]){
@@ -22,25 +39,25 @@ int main(int argc, char * argv[]){
 	FILE *out = NULL;
 	int rc = 0;
 	int force = 0;
-	char *incname = argv[1];
+	int extract = 0;
+	char *incname = NULL;
+	int free_outname = 0;
 	char *outname = NULL;
 	char *str_rc = NULL;
 	char *pre_rc = NULL;
-	char *suffix = ".dp";
+	int level = LOG_INFO;
 	
 	static struct option long_options[] =
 	{
-		/* Verbosity options */
-		{"silent",     no_argument,       0, 's'},
-		{"brief",      no_argument,       0, 'b'},
-		{"verbose",    no_argument,       0, 'v'},
-		{"debug",      no_argument,       0, 'g'},
 		/* Utility */
+		{"verbose",    no_argument,       0, 'v'},
+		{"silent",     no_argument,       0, 's'},
 		{"help",       no_argument,       0, 'h'},
 		/* File related options */
-		{"decompress", required_argument, 0, 'd'},
-		{"output",     required_argument, 0, 'o'},
 		{"force",      no_argument,       0, 'f'},
+		{"extract",    no_argument,       0, 'x'},
+		{"input",      required_argument, 0, 'i'},
+		{"output",     required_argument, 0, 'o'},
 		{0, 0, 0, 0}
 	};
 	
@@ -49,7 +66,7 @@ int main(int argc, char * argv[]){
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 	
-		c = getopt_long(argc, argv, "sbvghd:o:f", long_options, &option_index);
+		c = getopt_long(argc, argv, "vshfxi:o:", long_options, &option_index);
 	
 		/* Detect the end of the options. */
 		if (c == -1)
@@ -57,99 +74,105 @@ int main(int argc, char * argv[]){
 	
 		switch (c)
 		{
-		case 's':
-			// TODO: logger
-			break;
-		case 'b':
-			// TODO: logger
-			break;
 		case 'v':
-			// TODO: logger
+			if(level != LOG_TRACE)
+				level--;
 			break;
-		case 'g':
-			// TODO: logger
+		case 's':
+			level = LOG_FATAL;
+			log_set_quiet(1);
 			break;
 		case 'h':
 			usage(basename(argv[0]));
 			return 0;
-		case 'd':
-			// printf("option -d with value `%s'\n", optarg);
-			break;
-		case 'o':
-			// printf("option -o with value `%s'\n", optarg);
-			break;
 		case 'f':
-			// printf("I: force\n");
 			force = 1;
 			break;
-		case '?':
-			/* getopt_long already printed an error message. */
+		case 'x':
+			extract = 1;
+			break;
+		case 'i':
+			incname = optarg;
+			break;
+		case 'o':
+			outname = optarg;
 			break;
 		default:
 			usage(basename(argv[0]));
 			return 1;
 		}
 	}
+	
+	log_set_level(level);
 
 	/* Print any remaining command line arguments (not options). */
 	if (argc == 1) {
-		log_error("E: not enough arguments");
+		log_error("not enough arguments");
 		usage(basename(argv[0]));
 		return 1;
-	} else if (optind == argc){
+	} else if (optind == argc && incname == NULL){
 		log_error("TODO: read off stdin");
-		// set output filename automatically
+		// set output filename automatically or require output name?
 	} else if (argc - optind > 1) {
-		log_error("E: only specify one file");
-	} else {
+		log_error("only specify one file");
+	} else if (incname == NULL){
 		// TODO: multi-file
 		//~ while (optind < argc)
 			//~ // printf ("%s ", argv[optind++]);
 		incname = argv[optind++];
 	}
 	
+	if(force)
+		log_debug("force");
+	if(extract)
+		log_debug("extract from '%s'", incname);
+	log_debug("use '%s' as input", incname);
+	log_debug("use '%s' as output", outname);
+	
 	size_t inamelen = strlen(incname);
 	
-	outname = calloc( inamelen + strlen(suffix) + 1, sizeof(char));
-	if(outname == NULL){
-		log_error("failed to allocate");
-		rc = 1;
-		goto safe_fail;
+	if( outname == NULL ){
+		free_outname = 1;
+		outname = calloc( inamelen + strlen(suffix) + 1, sizeof(char));
+		if(outname == NULL){
+			log_error("failed to allocate");
+			rc = 1;
+			goto safe_fail;
+		}
+
+		str_rc = strcpy(outname, incname);
+		if(str_rc != outname){
+			log_error("failed to generate output file name");
+			rc = 1;
+			goto safe_fail;
+		}
+
+		pre_rc = strcpy(outname + inamelen, suffix);
+		if(pre_rc != outname + inamelen){
+			log_error("failed to generate output file name");
+			rc = 1;
+			goto safe_fail;
+		}
 	}
 	
-	str_rc = strcpy(outname, incname);
-	if(str_rc != outname){
-		log_error("failed to generate output file name");
-		rc = 1;
-		goto safe_fail;
-	}
-	log_info("I: writing out to %s", outname);
-	
-	pre_rc = strcpy(outname + inamelen, suffix);
-	if(pre_rc != outname + inamelen){
-		log_error("E: failed to generate output file name");
-		rc = 1;
-		goto safe_fail;
-	}
-	
-	log_info("I: writing out to %s", outname);
+	log_info("writing out to %s", outname);
 	
 	if( access(incname, R_OK) == -1) {
-		log_error("E: no readable file '%s' was found", incname);
+		log_error("no readable file '%s' was found", incname);
 		rc = 1;
 		goto safe_fail;
 	}
 	
 	if( access(outname, F_OK) != -1) {
 		if (force != 1) {
-			log_error("E: file '%s' already exists", outname);
-			log_info("I: use '-f' flag to force overwrite");
+			log_error("file '%s' already exists", outname);
+			log_info("use '-f' flag to force overwrite");
 			rc = 2;
 			goto safe_fail;
 		} else {
 			rc = remove(outname);
 			if (rc) {
-				log_error("E: failed to force remove '%s'", outname);
+				log_error("failed to force remove '%s'", outname);
 				goto safe_fail;
 			}
 		}
@@ -159,7 +182,7 @@ int main(int argc, char * argv[]){
 	
 	int seekrc = fseek(inc, 0L, SEEK_END);
 	if(seekrc != 0){
-		log_error("E: seek on '%s' failed", incname);
+		log_error("seek on '%s' failed", incname);
 		rc = seekrc;
 		goto safe_fail;
 	}
@@ -167,11 +190,11 @@ int main(int argc, char * argv[]){
 	long inclen = ftell(inc);
 	rewind(inc);
 	
-	log_info("I: len of '%s' is %ldB", incname, inclen);
+	log_info("len of '%s' is %ldB", incname, inclen);
 	
 	out = fopen(outname, "wb");
 	if(out == NULL){
-		log_error("E: out didn't open properly");
+		log_error("out didn't open properly");
 		return -1;
 	}
 	
@@ -181,7 +204,7 @@ int main(int argc, char * argv[]){
 	
 	if (inc != NULL) fclose(inc);
 	if (out != NULL) fclose(out);
-	if (outname != NULL) free(outname);
+	if (outname != NULL && free_outname) free(outname);
 	
 	return rc;
 }

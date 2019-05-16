@@ -243,7 +243,7 @@ int process(FILE * inc, FILE * out){
 		
 	}
 	
-	log_info("I: outlen -- %luB", outlen);
+	log_info("outlen -- %luB", outlen);
 	
 	return 0;
 }
