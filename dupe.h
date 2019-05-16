@@ -4,6 +4,7 @@
 
 #include "util.h"
 
+unit un_dupe(short buf[BUFLEN], FILE *out);
 unit dupe(short buf[BUFLEN]);
 
 #endif

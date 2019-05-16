@@ -18,19 +18,26 @@ typedef enum {
 	BUF_IND,
 } mode;
 
+typedef enum {
+	BUF_FIL,
+	BUF_FIL_IND,
+} unmode;
+
 typedef struct {
 	short pos;
 	short len;
 	void (*func)();
+	void (*un_func)();
 	mode args;
+	unmode un_args;
 	short index;
 } flist;
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF }, // required
-	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF },
-	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND },
+	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe, .un_args = BUF_FIL }, // required
+	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_fake, .un_args = BUF_FIL },
+	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_fake, .un_args = BUF_FIL },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
@@ -104,7 +111,7 @@ int init_fops(flist *f){
 	return 0;
 }
 
-int process(FILE * inc, FILE * out){
+int process(FILE * inc, FILE * out, int extract){
 	
 	uint64_t outlen = 0;
 	
@@ -134,28 +141,56 @@ int process(FILE * inc, FILE * out){
 		}
 		
 		unit units[MODLEN] = { 0 };
+		// extraction funcs
+		unit (*buf_fil_func)(short *, FILE *) = NULL;
+		unit (*buf_fil_ind_func)(short *, FILE *, short) = NULL;
+		// compression funcs
 		unit (*buf_func)(short *) = NULL;
 		unit (*buf_ind_func)(short *, short) = NULL;
+		
 		int failure = 0;
 		
-		#pragma omp parallel for
-		for(int i = 0; i < MODLEN; i++){
-			
-			if(f_ops[i].func == NULL)
-				continue; // unused op
-			
-			switch(f_ops[i].args){
-				case BUF:
-					buf_func = (unit (*)(short *))f_ops[i].func;
-					units[i] = buf_func(buf);
-					break;
-				case BUF_IND:
-					buf_ind_func = (unit (*)(short *, short))f_ops[i].func;
-					units[i] = buf_ind_func(buf, f_ops[i].index);
-					break;
-				default:
-					log_error("unknown f_ops.args %d", f_ops[i].args);
-					failure = 1;
+		if(extract){
+			#pragma omp parallel for
+			for(int i = 0; i < MODLEN; i++){
+				
+				if(f_ops[i].un_func == NULL)
+					continue; // unused op
+				
+				switch(f_ops[i].un_args){
+					case BUF_FIL:
+						buf_fil_func = (unit (*)(short *, FILE *))f_ops[i].un_func;
+						units[i] = buf_fil_func(buf, out);
+						break;
+					case BUF_FIL_IND:
+						buf_fil_ind_func = (unit (*)(short *, FILE *, short))f_ops[i].un_func;
+						units[i] = buf_fil_ind_func(buf, out, f_ops[i].index);
+						break;
+					default:
+						log_error("unknown f_ops.args %d", f_ops[i].args);
+						failure = 1;
+				}
+			}
+		} else {
+			#pragma omp parallel for
+			for(int i = 0; i < MODLEN; i++){
+				
+				if(f_ops[i].func == NULL)
+					continue; // unused op
+				
+				switch(f_ops[i].args){
+					case BUF:
+						buf_func = (unit (*)(short *))f_ops[i].func;
+						units[i] = buf_func(buf);
+						break;
+					case BUF_IND:
+						buf_ind_func = (unit (*)(short *, short))f_ops[i].func;
+						units[i] = buf_ind_func(buf, f_ops[i].index);
+						break;
+					default:
+						log_error("unknown f_ops.args %d", f_ops[i].args);
+						failure = 1;
+				}
 			}
 		}
 		
@@ -181,20 +216,23 @@ int process(FILE * inc, FILE * out){
 			consume = best_unit.consumed;
 			
 			// TODO: write out new chunk
-			if(log_get_level() <= LOG_DEBUG){
+			if(log_get_level() <= LOG_DEBUG)
 				printf("out:");
 				
-				for(int i = 0; i < DELLEN; i++){
-					fputc(best, out);
+			for(int i = 0; i < DELLEN; i++){
+				fputc(best, out);
+				if(log_get_level() <= LOG_DEBUG)
 					printf("%3x", best);
-				}
-				
-				for(int i = 0; i < best_unit.payload_used; i++){
-					fputc(best_unit.payload[i], out);
-					printf("%3x", best_unit.payload[i]);
-				}
-				printf("\n");
 			}
+			
+			for(int i = 0; i < best_unit.payload_used; i++){
+				fputc(best_unit.payload[i], out);
+				if(log_get_level() <= LOG_DEBUG)
+					printf("%3x", best_unit.payload[i]);
+			}
+			
+			if(log_get_level() <= LOG_DEBUG)
+				printf("\n");
 			
 			outbytes =  DELLEN + best_unit.payload_used;
 		} else {

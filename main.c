@@ -127,7 +127,6 @@ int main(int argc, char * argv[]){
 	if(extract)
 		log_debug("extract from '%s'", incname);
 	log_debug("use '%s' as input", incname);
-	log_debug("use '%s' as output", outname);
 	
 	size_t inamelen = strlen(incname);
 	
@@ -155,7 +154,7 @@ int main(int argc, char * argv[]){
 		}
 	}
 	
-	log_info("writing out to %s", outname);
+	log_info("use '%s' as output", outname);
 	
 	if( access(incname, R_OK) == -1) {
 		log_error("no readable file '%s' was found", incname);
@@ -198,7 +197,7 @@ int main(int argc, char * argv[]){
 		return -1;
 	}
 	
-	rc = process(inc, out);
+	rc = process(inc, out, extract);
 	
 	safe_fail:
 	

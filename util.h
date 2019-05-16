@@ -13,8 +13,10 @@ typedef struct {
 	unsigned char consumed;
 	unsigned char payload[10];
 	unsigned char payload_used;
+	unsigned char rc;
 } unit;
 
 unsigned char rotate_u8_left(int bits, unsigned char num);
 
+int un_fake(short * dummys, FILE * dummyf);
 #endif

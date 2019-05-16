@@ -5,6 +5,39 @@
 
 #include "dupe.h"
 
+unit un_dupe(short * chunk, FILE *out){
+	
+	log_trace("un_dupe");
+	
+	unit ru = { 0 };
+	
+	for(int i = 0; i < DELLEN + 2; i++){
+		if(chunk[i] == DP_EOB || chunk[i] == DP_EOF){
+			log_error("reached EOB || EOF: %x:%x", i, chunk[i]);
+			ru.rc = 1;
+			return ru;
+		}
+	}
+	
+	int len = chunk[DELLEN];
+	int val = chunk[DELLEN + 1];
+	
+	log_trace("dupe %02x:%02x", len, val);
+	
+	for(int i = 0; i < len; i++){
+		
+		if (fputc(val, out) != val){
+			log_error("failed to write to output file");
+			ru.rc = 1;
+		}
+	}
+	
+	log_trace("un_dupe_consume -> %d", ru.consumed);
+	log_trace("un_dupe_rc      -> %d", ru.rc);
+	
+	return ru;
+}
+
 unit dupe(short buf[BUFLEN]){
 	log_trace("dupe");
 	

@@ -2,14 +2,18 @@
 MAIN_NAME := dumbpress
 
 SRC := main.c process.c dupe.c add_const.c util.c rleft_const.c add_pattern.c log.c
+
+TESTDIR := test
+TESTS := $(patsubst $(TESTDIR)/%.bin,$(TESTDIR)/%.dp,$(wildcard $(TESTDIR)/*.bin))
+
 FLAGS := -Wall -std=c99 -O3 -pedantic -DLOG_USE_COLOR
 LIBS :=
 
 PAR=0
 
-.PHONY: all $(MAIN_NAME) lint
+.PHONY: all bin lint
 
-all: lint par $(MAIN_NAME)
+all: lint par bin
 
 par:
 ifeq ($(PAR),1)
@@ -17,8 +21,15 @@ FLAGS := $(FLAGS) -fopenmp
 LIBS := $(LIBS) -lgomp
 endif
 
-$(MAIN_NAME):
+bin:
 	gcc $(SRC) $(FLAGS) -o $(MAIN_NAME) $(LIBS)
+
+$(MAIN_NAME): bin
+
+$(TESTDIR)/%.dp: $(TESTDIR)/%.bin
+	./$(MAIN_NAME) -fs -i $<
+
+allautotest: $(MAIN_NAME) $(TESTS)
 
 memtest:
 	valgrind --track-origins=yes --leak-check=yes --show-reachable=yes\
