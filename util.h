@@ -18,5 +18,5 @@ typedef struct {
 
 unsigned char rotate_u8_left(int bits, unsigned char num);
 
-int un_fake(short * dummys, FILE * dummyf);
+int un_fake(short * dummys, FILE * dummyf, short delim);
 #endif

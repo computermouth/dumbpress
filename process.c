@@ -19,8 +19,8 @@ typedef enum {
 } mode;
 
 typedef enum {
-	BUF_FIL,
-	BUF_FIL_IND,
+	BUF_FIL_GLO,
+	BUF_FIL_GLO_LOC,
 } unmode;
 
 typedef struct {
@@ -35,9 +35,9 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe, .un_args = BUF_FIL }, // required
-	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_fake, .un_args = BUF_FIL },
-	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_fake, .un_args = BUF_FIL },
+	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe, .un_args = BUF_FIL_GLO }, // required
+	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_fake, .un_args = BUF_FIL_GLO },
+	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_fake, .un_args = BUF_FIL_GLO },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
@@ -142,8 +142,8 @@ int process(FILE * inc, FILE * out, int extract){
 		
 		unit units[MODLEN] = { 0 };
 		// extraction funcs
-		unit (*buf_fil_func)(short *, FILE *) = NULL;
-		unit (*buf_fil_ind_func)(short *, FILE *, short) = NULL;
+		unit (*buf_fil_glo_func)(short *, FILE *, short) = NULL;
+		unit (*buf_fil_glo_loc_func)(short *, FILE *, short, short) = NULL;
 		// compression funcs
 		unit (*buf_func)(short *) = NULL;
 		unit (*buf_ind_func)(short *, short) = NULL;
@@ -158,13 +158,13 @@ int process(FILE * inc, FILE * out, int extract){
 					continue; // unused op
 				
 				switch(f_ops[i].un_args){
-					case BUF_FIL:
-						buf_fil_func = (unit (*)(short *, FILE *))f_ops[i].un_func;
-						units[i] = buf_fil_func(buf, out);
+					case BUF_FIL_GLO:
+						buf_fil_glo_func = (unit (*)(short *, FILE *, short))f_ops[i].un_func;
+						units[i] = buf_fil_glo_func(buf, out, i);
 						break;
-					case BUF_FIL_IND:
-						buf_fil_ind_func = (unit (*)(short *, FILE *, short))f_ops[i].un_func;
-						units[i] = buf_fil_ind_func(buf, out, f_ops[i].index);
+					case BUF_FIL_GLO_LOC:
+						buf_fil_glo_loc_func = (unit (*)(short *, FILE *, short, short))f_ops[i].un_func;
+						units[i] = buf_fil_glo_loc_func(buf, out, i, f_ops[i].index);
 						break;
 					default:
 						log_error("unknown f_ops.args %d", f_ops[i].args);
@@ -252,9 +252,9 @@ int process(FILE * inc, FILE * out, int extract){
 		log_debug("outlen: %lu", outlen);
 		
 		// make room in buffer
-		void *rc = NULL;
-		rc = memmove(buf, buf+consume, sizeof(short) * (BUFLEN - consume) );
-		if (rc != buf){
+		void *mm_rc = NULL;
+		mm_rc = memmove(buf, buf+consume, sizeof(short) * (BUFLEN - consume) );
+		if (mm_rc != buf){
 			log_error("couldn't memmove after dupe");
 			return 1;
 		}

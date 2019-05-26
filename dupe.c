@@ -5,11 +5,18 @@
 
 #include "dupe.h"
 
-unit un_dupe(short * chunk, FILE *out){
+unit un_dupe(short * chunk, FILE *out, short delim){
 	
 	log_trace("un_dupe");
 	
 	unit ru = { 0 };
+	
+	for(int i = 0; i < DELLEN; i++){
+		if(chunk[i] != delim){
+			log_trace("negative negative");
+			return ru;
+		}
+	}
 	
 	for(int i = 0; i < DELLEN + 2; i++){
 		if(chunk[i] == DP_EOB || chunk[i] == DP_EOF){
@@ -32,7 +39,7 @@ unit un_dupe(short * chunk, FILE *out){
 		}
 	}
 	
-	log_trace("un_dupe_consume -> %d", ru.consumed);
+	log_trace("un_dupe_consume -> %d", DELLEN + 2);
 	log_trace("un_dupe_rc      -> %d", ru.rc);
 	
 	return ru;
