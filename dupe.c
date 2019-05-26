@@ -31,13 +31,26 @@ unit un_dupe(short * chunk, FILE *out, short delim){
 	
 	log_trace("dupe %02x:%02x", len, val);
 	
+	// write out new chunk
+	if(log_get_level() <= LOG_DEBUG)
+		printf("out:");
+	
 	for(int i = 0; i < len; i++){
 		
+		if(log_get_level() <= LOG_DEBUG)
+			printf("%3x", val);
+			
 		if (fputc(val, out) != val){
 			log_error("failed to write to output file");
 			ru.rc = 1;
 		}
 	}
+	
+	if(log_get_level() <= LOG_DEBUG)
+		printf("\n");
+	
+	ru.payload_used = len;
+	ru.consumed = DELLEN + 2;
 	
 	log_trace("un_dupe_consume -> %d", DELLEN + 2);
 	log_trace("un_dupe_rc      -> %d", ru.rc);

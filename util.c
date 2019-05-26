@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 
+#include "log.h"
+
 #include "util.h"
 
 unsigned char rotate_u8_left(int bits, unsigned char num){
@@ -12,5 +14,8 @@ unsigned char rotate_u8_left(int bits, unsigned char num){
 }
 
 int un_fake(short * dummys, FILE * dummyf, short delim){
+	
+	log_error("faking it");
+	
 	return 0;
 }

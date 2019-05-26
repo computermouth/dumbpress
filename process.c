@@ -200,14 +200,18 @@ int process(FILE * inc, FILE * out, int extract){
 		// find most compressed unit
 		int best = 0;
 		for(int i = 0; i < MODLEN; i++){
-			if(units[i].consumed > best)
+			if(units[i].consumed > best){
+				log_debug("found new best units[%d]", i);
 				best = i;
+			}
 		}
 		
 		// TODO: best = consumed - len(outstring)
 		unit best_unit = units[best];
-		if(units[best].consumed == units[0].consumed)
+		if(units[best].consumed == units[0].consumed){
+			best = 0;
 			best_unit = units[0];
+		}
 		
 		int consume = 1;
 		int outbytes = 1;
@@ -215,26 +219,33 @@ int process(FILE * inc, FILE * out, int extract){
 		if(best_unit.consumed > 0){
 			consume = best_unit.consumed;
 			
-			// TODO: write out new chunk
-			if(log_get_level() <= LOG_DEBUG)
-				printf("out:");
+			if(extract){
+				outbytes = best_unit.payload_used;
+			} else {
+
+				// write out new chunk
+				if(log_get_level() <= LOG_DEBUG)
+					printf("out:");
+					
+				for(int i = 0; i < DELLEN; i++){
+					fputc(best, out);
+					if(log_get_level() <= LOG_DEBUG)
+						printf("%3x", best);
+				}
 				
-			for(int i = 0; i < DELLEN; i++){
-				fputc(best, out);
+				for(int i = 0; i < best_unit.payload_used; i++){
+					fputc(best_unit.payload[i], out);
+					if(log_get_level() <= LOG_DEBUG)
+						printf("%3x", best_unit.payload[i]);
+				}
+				
 				if(log_get_level() <= LOG_DEBUG)
-					printf("%3x", best);
+					printf("\n");
+				
+				outbytes =  DELLEN + best_unit.payload_used;
+			
 			}
 			
-			for(int i = 0; i < best_unit.payload_used; i++){
-				fputc(best_unit.payload[i], out);
-				if(log_get_level() <= LOG_DEBUG)
-					printf("%3x", best_unit.payload[i]);
-			}
-			
-			if(log_get_level() <= LOG_DEBUG)
-				printf("\n");
-			
-			outbytes =  DELLEN + best_unit.payload_used;
 		} else {
 			fputc(buf[0], out);
 		}
