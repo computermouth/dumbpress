@@ -35,9 +35,9 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe, .un_args = BUF_FIL_GLO }, // required
-	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_fake, .un_args = BUF_FIL_GLO },
-	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_fake, .un_args = BUF_FIL_GLO },
+	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe,      .un_args = BUF_FIL_GLO }, // required
+	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_add_const, .un_args = BUF_FIL_GLO },
+	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_fake,      .un_args = BUF_FIL_GLO },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };

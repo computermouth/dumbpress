@@ -7,6 +7,62 @@
 
 #include "add_const.h"
 
+unit un_add_const(short * chunk, FILE *out, short delim){
+	
+	log_trace("un_add_const");
+	
+	unit ru = { 0 };
+	
+	for(int i = 0; i < DELLEN; i++){
+		if(chunk[i] != delim){
+			log_trace("negative negative");
+			return ru;
+		}
+	}
+	
+	for(int i = 0; i < DELLEN + 2; i++){
+		if(chunk[i] == DP_EOB || chunk[i] == DP_EOF){
+			log_error("reached EOB || EOF: %x:%x", i, chunk[i]);
+			ru.rc = 1;
+			return ru;
+		}
+	}
+	
+	int diff  = chunk[DELLEN];
+	int len   = chunk[DELLEN + 1];
+	int start = chunk[DELLEN + 2];
+	
+	log_trace("add_const %02x:%02x:%02x", diff, len, start);
+	
+	// write out new chunk
+	if(log_get_level() <= LOG_DEBUG)
+		printf("out:");
+	
+	for(int i = 0; i < len; i++){
+		
+		if(log_get_level() <= LOG_DEBUG)
+			printf("%3x", start);
+			
+		if (fputc(start, out) != start){
+			log_error("failed to write to output file");
+			ru.rc = 1;
+		}
+		
+		start += diff;
+	}
+	
+	if(log_get_level() <= LOG_DEBUG)
+		printf("\n");
+	
+	ru.payload_used = len;
+	ru.consumed = DELLEN + 3;
+	
+	log_trace("un_dupe_consume -> %d", DELLEN + 2);
+	log_trace("un_dupe_rc      -> %d", ru.rc);
+	
+	return ru;
+}
+
 unit add_const(short buf[BUFLEN]){
 	log_trace("add_const");
 	
@@ -29,10 +85,10 @@ unit add_const(short buf[BUFLEN]){
 		return hit;
 	}
 	
-	diff = buf[0] - buf[1];
+	diff = buf[1] - buf[0];
 	log_trace("diff: %d", diff);
 	
-	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len] - buf[len + 1] == diff){ // start counting dupes
+	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len + 1] - buf[len] == diff){ // start counting dupes
 		log_trace("len:con -- %03d:%03d", len, buf[len+1]);
 		len++;
 	}
