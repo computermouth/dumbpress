@@ -4,6 +4,7 @@
 
 #include "util.h"
 
+unit un_rleft_const(short buf[BUFLEN], FILE *out, short delim, short location);
 unit rleft_const(short buf[BUFLEN], short index);
 
 #endif
