@@ -12,6 +12,7 @@
 #include "add_const.h"
 #include "rleft_const.h"
 #include "add_pattern.h"
+#include "fble_rot.h"
 
 typedef enum {
 	BUF,
@@ -35,9 +36,10 @@ typedef struct {
 
 // input to generate dispatch table
 flist ops[] = {
-	{ AUTOPOS, 1, .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe,        .un_args = BUF_FIL_GLO     }, // required
-	{ AUTOPOS, 1, .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_add_const,   .un_args = BUF_FIL_GLO     },
-	{ AUTOPOS, 7, .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_rleft_const, .un_args = BUF_FIL_GLO_LOC },
+	{ AUTOPOS, 1,   .func = (void (*)())dupe,        .args = BUF,     .un_func = (void (*)())un_dupe,        .un_args = BUF_FIL_GLO     }, // required
+	{ AUTOPOS, 1,   .func = (void (*)())add_const,   .args = BUF,     .un_func = (void (*)())un_add_const,   .un_args = BUF_FIL_GLO     },
+	{ AUTOPOS, 7,   .func = (void (*)())rleft_const, .args = BUF_IND, .un_func = (void (*)())un_rleft_const, .un_args = BUF_FIL_GLO_LOC },
+	{ AUTOPOS, 112, .func = (void (*)())fble_rot,    .args = BUF_IND, .un_func = (void (*)())un_fble_rot,    .un_args = BUF_FIL_GLO_LOC },
 	//~ { AUTOPOS, 1, .func = (void (*)())add_pattern, .args = BUF },
 	//~ { 128,   128, .func = (void (*)())dupe, .args = BUF_IND }
 };
@@ -90,21 +92,26 @@ int fill_buffer(short buf[BUFLEN], FILE * inc){
 // create full dispatch table
 int init_fops(flist *f){
 	
+	int start = 0;
+	
 	for(int i = 0; i < (sizeof(ops)/sizeof(ops[0])); i++){
 		
-		int start = i;
-		if (ops[i].pos != AUTOPOS)
-			start = ops[i].pos;
+		//~ int start = i;
+		//~ if (ops[i].pos != AUTOPOS)
+			//~ start = ops[i].pos;
 		
-		for(int j = start; j < start + ops[i].len; j++){
+		int add = start;
+		
+		for(int j = add; j < add + ops[i].len; j++){
+			log_debug("inserting ops[%d] at f[%d]", i, j);
 			if ( f[j].func != NULL ){
 				log_error("failed to insert ops[%d] at f[%d], as something's already there", i, ops[i].pos);
 				return 1;
 			}
 			
 			f[j] = ops[i];
-			f[j].index = j - start;
-			log_debug("inserting ops[%d] at f[%d]", i, j);
+			f[j].index = j - add;
+			start++;
 		}
 	}
 	
@@ -199,18 +206,13 @@ int process(FILE * inc, FILE * out, int extract){
 		
 		// find most compressed unit
 		int best = 0;
+		unit best_unit = units[best];
 		for(int i = 0; i < MODLEN; i++){
-			if(units[i].consumed > best){
+			if( (units[i].consumed - units[i].payload_used) > (best_unit.consumed - best_unit.payload_used) ){
 				log_debug("found new best units[%d]", i);
 				best = i;
+				best_unit = units[best];
 			}
-		}
-		
-		// TODO: best = consumed - len(outstring)
-		unit best_unit = units[best];
-		if(units[best].consumed == units[0].consumed){
-			best = 0;
-			best_unit = units[0];
 		}
 		
 		int consume = 1;

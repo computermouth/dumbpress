@@ -11,7 +11,7 @@
 
 typedef struct {
 	unsigned char consumed;
-	unsigned char payload[10];
+	unsigned char payload[256];
 	unsigned char payload_used;
 	unsigned char rc;
 } unit;
