@@ -19,3 +19,24 @@ int un_fake(short * dummys, FILE * dummyf, short delim){
 	
 	return 0;
 }
+
+int compare_unit(unit *a, unit *b){
+	
+	int same = 0;
+	
+	if(
+		a->consumed == b->consumed         &&
+		a->payload_used == b->payload_used &&
+		a->rc == b->rc
+	){
+		
+		for(int i = 0; i < BUFLEN; i++){
+			if (a->payload[i] != b->payload[i])
+				return 0;
+		}
+		
+		same = 1;
+	}
+	
+	return same;
+}

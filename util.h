@@ -11,7 +11,7 @@
 
 typedef struct {
 	unsigned char consumed;
-	unsigned char payload[256];
+	unsigned char payload[BUFLEN];
 	unsigned char payload_used;
 	unsigned char rc;
 } unit;
@@ -19,4 +19,6 @@ typedef struct {
 unsigned char rotate_u8_left(int bits, unsigned char num);
 
 int un_fake(short * dummys, FILE * dummyf, short delim);
+
+int compare_unit(unit *, unit *);
 #endif

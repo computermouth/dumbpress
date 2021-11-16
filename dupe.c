@@ -75,8 +75,10 @@ unit dupe(short buf[BUFLEN]){
 		len++;
 	}
 	
-	if (len < DELLEN) // no dupes
+	if (len < DELLEN){ // no dupes
+		log_trace("no dupes");
 		return hit;
+	}
 	
 	hit.consumed = len;
 	hit.payload[0] = len;
