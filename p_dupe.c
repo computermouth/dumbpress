@@ -3,7 +3,7 @@
 
 #include "log.h"
 
-#include "dupe.h"
+#include "p_dupe.h"
 
 unit un_dupe(short * chunk, FILE *out, short delim){
 	
@@ -64,7 +64,7 @@ unit dupe(short buf[BUFLEN]){
 	unit hit = { 
 		.consumed = 0,
 		.payload = { 0x00 },
-		.payload_used = 2,
+		.payload_used = 0,
 	};
 	
 	int len = 0;
@@ -83,6 +83,7 @@ unit dupe(short buf[BUFLEN]){
 	hit.consumed = len;
 	hit.payload[0] = len;
 	hit.payload[1] = val;
+	hit.payload_used = 2;
 	
 	log_trace("dupe_consume -> %d", len);
 	log_trace("dupe_length  -> %d", len);

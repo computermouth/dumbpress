@@ -1,6 +1,6 @@
 
-#ifndef _ADD_PATTERN_H_
-#define _ADD_PATTERN_H_
+#ifndef _P_ADD_PATTERN_H_
+#define _P_ADD_PATTERN_H_
 
 #include "util.h"
 

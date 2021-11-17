@@ -1,6 +1,6 @@
 
-#ifndef _ADD_CONST_H_
-#define _ADD_CONST_H_
+#ifndef _P_ADD_CONST_H_
+#define _P_ADD_CONST_H_
 
 #include "util.h"
 

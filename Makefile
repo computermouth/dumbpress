@@ -1,13 +1,19 @@
 
 MAIN_NAME := dumbpress
 
-SRC := main.c process.c dupe.c add_const.c util.c rleft_const.c add_pattern.c log.c fble_rot.c
+SRC := main.c process.c log.c util.c
+SRC += p_dupe.c
+SRC += p_add_const.c
+SRC += p_rleft_const.c
+SRC += p_add_pattern.c
+SRC += p_fble_rot.c
 
 TESTDIR := test
 TESTS := $(patsubst $(TESTDIR)/%.bin,$(TESTDIR)/%.dp,$(wildcard $(TESTDIR)/*.bin))
 EXTRACTS := $(patsubst $(TESTDIR)/%.bin.dp,$(TESTDIR)/%.bin.dp.dp,$(wildcard $(TESTDIR)/*.bin.dp))
 
 FLAGS := -Wall -std=c99 -no-pie -pg -O3 -pedantic -DLOG_USE_COLOR
+FLAGS += $(LOGLEVEL)
 LIBS :=
 
 PAR=0

@@ -8,11 +8,11 @@
 #include "util.h"
 #include "log.h"
 
-#include "dupe.h"
-#include "add_const.h"
-#include "rleft_const.h"
-#include "add_pattern.h"
-#include "fble_rot.h"
+#include "p_dupe.h"
+#include "p_add_const.h"
+#include "p_rleft_const.h"
+#include "p_add_pattern.h"
+#include "p_fble_rot.h"
 
 typedef enum {
 	BUF,

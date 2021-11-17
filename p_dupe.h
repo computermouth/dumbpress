@@ -1,6 +1,6 @@
 
-#ifndef _DUPE_H_
-#define _DUPE_H_
+#ifndef _P_DUPE_H_
+#define _P_DUPE_H_
 
 #include "util.h"
 

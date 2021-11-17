@@ -1,6 +1,6 @@
 
-#ifndef _RLEFT_CONST_H_
-#define _RLEFT_CONST_H_
+#ifndef _P_RLEFT_CONST_H_
+#define _P_RLEFT_CONST_H_
 
 #include "util.h"
 

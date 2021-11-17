@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "add_pattern.h"
+#include "p_add_pattern.h"
 
 unit add_pattern(short buf[BUFLEN]){
 	// printf("B: add_pattern\n");
