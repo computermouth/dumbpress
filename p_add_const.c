@@ -88,7 +88,9 @@ unit add_const(short buf[BUFLEN]){
 	diff = buf[1] - buf[0];
 	log_trace("diff: %d", diff);
 	
-	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len + 1] - buf[len] == diff){ // start counting dupes
+	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF &&
+		(buf[len] + 256 + diff) % 256 == buf[len+1] ) { // start counting dupes
+		            // underflow  // overflow
 		log_trace("len:con -- %03d:%03d", len, buf[len+1]);
 		len++;
 	}

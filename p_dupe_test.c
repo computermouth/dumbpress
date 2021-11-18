@@ -92,7 +92,7 @@ static void minimum_dupe(void)
 
 int all_dupe_test(void)
 {
-	UnityBegin("test_dupe.c");
+	UnityBegin("p_dupe_test.c");
 	
 	RUN_TEST(basic_dupe_test);
 	RUN_TEST(dupe_after_first_byte);

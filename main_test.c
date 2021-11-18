@@ -3,6 +3,7 @@
 
 #include "units/unity.h"
 #include "p_dupe_test.h"
+#include "p_add_const_test.h"
 #include "log.h"
 
 void setUp(void)
@@ -49,5 +50,6 @@ int main(int argc, char *argv[])
 	log_set_level(level);
 	
 	all_dupe_test();
+	all_add_const_test();
 	
 }
