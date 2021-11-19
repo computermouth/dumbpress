@@ -2,6 +2,8 @@
 #include "p_add_const.h"
 #include "log.h"
 
+#include "p_add_const_test.h"
+
 static void basic_add_const_test(void)
 {
 	

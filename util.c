@@ -8,7 +8,7 @@
 unsigned char rotate_u8_left(int bits, unsigned char num){
 	
 	for(int i = 0; i < bits; i++)
-		num = (num >> 1) | (num << 7);
+		num = (num >> 7) | (num << 1);
 	
 	return num;
 }

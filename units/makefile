@@ -22,7 +22,7 @@ EXTRAS = log.c util.c main_test.c
 
 .PHONY: test
 test: tests.out
-	./tests.out $(LOGLEVEL)
+	@./tests.out $(LOGLEVEL)
 
 .PHONY: memcheck
 memcheck: ./$(PREFIX)*.c ./*.h $(EXTRAS)

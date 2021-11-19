@@ -6,3 +6,4 @@ dumbpress
 test/*.dp
 *.o
 tests.out
+gmon.out

@@ -16,21 +16,21 @@ void usage(char * bin){
 	log_info("usage:");
 	log_info("  %s [-fvvsh] [-i input] [-o output] [/path/to/input/file]", bin);
 	log_info(NULL);
-	log_info("  -f --force   force overwrite of output file", bin);
-	log_info("  -v --verbose increase stdout volume, use up to 2x", bin);
-	log_info("  -s --silent  no output");
+	log_info("  -f --force                          force overwrite of output file", bin);
+	log_info("  -v --verbose                        increase stdout volume, use up to 2x", bin);
+	log_info("  -s --silent                         no output");
 	log_info(NULL);
 	log_info("  default output file name is 'sprintf(\"%%s%s\", input_file)'", suffix);
 	log_info(NULL);
-	log_info("  %s                          compress stdin, write to stdout", bin);
-	log_info("  %s somefile                 compress somefile, write to somefile%s", bin, suffix);
-	log_info("  %s -o outfile somefile      compress somefile, write to outfile", bin);
-	log_info("  %s -o outfile -i somefile   same as above", bin);
+	log_info("  %s                           compress stdin, write to stdout", bin);
+	log_info("  %s somefile                  compress somefile, write to somefile%s", bin, suffix);
+	log_info("  %s -o outfile somefile       compress somefile, write to outfile", bin);
+	log_info("  %s -o outfile -i somefile    same as above", bin);
 	log_info(NULL);
-	log_info("  %s -x                       extract stdin, write to stdout", bin);
+	log_info("  %s -x                        extract stdin, write to stdout", bin);
 	log_info("  %s -x somefile%s            extract somefile%s, write to somefile", bin, suffix, suffix);
-	log_info("  %s -o outfile somefile%s    extract somefile%s, write to outfile", bin, suffix, suffix);
-	log_info("  %s -o outfile -i somefile%s same as above", bin, suffix);
+	log_info("  %s -x outfile somefile%s    extract somefile%s, write to outfile", bin, suffix, suffix);
+	log_info("  %s -x outfile -i somefile%s same as above", bin, suffix);
 }
 
 int main(int argc, char * argv[]){

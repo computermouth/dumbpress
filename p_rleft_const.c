@@ -90,7 +90,7 @@ unit rleft_const(short buf[BUFLEN], short index){
 	
 	log_trace("shift: %d", shift);
 	
-	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len] == rotate_u8_left(shift, buf[len + 1]) ){ // start counting dupes
+	while(len < BUFLEN - 1 && buf[len + 1] != DP_EOF && buf[len + 1] == rotate_u8_left(shift, buf[len]) ){ // start counting dupes
 		log_trace("len:com:par: %03d:%02x:%02x", len, buf[len], buf[len+1]);
 		len++;
 	}
