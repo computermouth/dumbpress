@@ -5,6 +5,7 @@
 #include "p_dupe_test.h"
 #include "p_add_const_test.h"
 #include "p_rleft_const_test.h"
+#include "p_fble_rot_test.h"
 #include "log.h"
 
 void setUp(void)
@@ -53,5 +54,6 @@ int main(int argc, char *argv[])
 	all_dupe_test();
 	all_add_const_test();
 	all_rleft_const_test();
+	all_fble_rot_test();
 	
 }
