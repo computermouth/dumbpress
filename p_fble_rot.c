@@ -78,14 +78,21 @@ unit fble_rot(short buf[BUFLEN], short index){
 	int packed_payload_bytes = 0;
 	int place_in_byte = 0;
 	
-	while(len < BUFLEN && buf[len] != DP_EOF){ // start counting fble_rots
+	while(len < BUFLEN && buf[len] != DP_EOF && buf[len] != DP_EOB){ // start counting fble_rots
 		
 		unsigned char shifted = rotate_u8_left(rota, buf[len]);
 		log_trace("fble_rot: drop: %02u buf[%02d]: %02x", drop, len, shifted);
 		
 		for(int i = 0; i <= drop; i++){
 			
-			if(shifted & (zero << i)){
+			// if zero == 0, the bitmask should be exactly 0
+			// if zero == 1, the bitmask should return 1 or higher if a match is found
+			
+			//~ if (zero <= (shifted & (1 << i)) ){
+			
+			if( (zero && shifted & (zero << i)) ||
+				(!zero && !(shifted & (1 << i)) )
+				){
 				log_trace("fble_rot: buf[%02d] %02x bit %d & %02x", len, shifted, i, (zero << i ));
 			} else {
 				log_trace("fble_rot: nope");
@@ -103,9 +110,6 @@ unit fble_rot(short buf[BUFLEN], short index){
 				packed_payload_bytes++;
 			}
 		}
-		
-		//~ drop > 0 && buf[len] & (zero << drop) &&
-		//~ int rc = add_bits_to_payload( (8 - (drop + 1)), buf[len], &hit.payload );
 		
 		len++;
 		log_trace("len -- %03d", len);
