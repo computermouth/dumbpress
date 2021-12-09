@@ -81,6 +81,7 @@ unit fble_rot(short buf[BUFLEN], short index){
 	while(len < BUFLEN && buf[len] != DP_EOF && buf[len] != DP_EOB){ // start counting fble_rots
 		
 		unsigned char shifted = rotate_u8_left(rota, buf[len]);
+		
 		log_trace("fble_rot: drop: %02u buf[%02d]: %02x", drop, len, shifted);
 		
 		for(int i = 0; i <= drop; i++){
@@ -88,10 +89,11 @@ unit fble_rot(short buf[BUFLEN], short index){
 			// if zero == 0, the bitmask should be exactly 0
 			// if zero == 1, the bitmask should return 1 or higher if a match is found
 			
-			//~ if (zero <= (shifted & (1 << i)) ){
+			//~ if (zero == ((shifted & (1 << i)) % 2) ){
+			// TODO: why doesn't this work as a one-liner of below?
 			
-			if( (zero && shifted & (zero << i)) ||
-				(!zero && !(shifted & (1 << i)) )
+			if( (zero == 1 &&   shifted & (1 << i)) ||
+				(zero == 0 && !(shifted & (1 << i)) )
 				){
 				log_trace("fble_rot: buf[%02d] %02x bit %d & %02x", len, shifted, i, (zero << i ));
 			} else {
@@ -118,11 +120,15 @@ unit fble_rot(short buf[BUFLEN], short index){
 	
 	thingy:
 	
-	if (len < packed_payload_bytes + DELLEN) // no fble_rots
+	if (len < packed_payload_bytes + DELLEN){
+		log_trace("found %d fble_rots, but packed len is less than %d", len, packed_payload_bytes + DELLEN);
 		return hit;
+	}
 	
-	if (place_in_byte != 0) // bytes don't align
+	if (place_in_byte != 0) {
+		log_trace("bytes don't align", len);
 		return hit;
+	}
 	
 	// move payload, and store length at the beginning
 	// waste of cpu, but easier to keep track of
@@ -150,8 +156,6 @@ unit fble_rot(short buf[BUFLEN], short index){
 		}
 		printf("\n");
 	}
-	
-	log_trace("fble_rot_value   -> %c", 0);
 	
 	return hit;
 }

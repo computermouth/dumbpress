@@ -40,21 +40,45 @@ int compare_unit(unit *expected, unit *returned){
 		}
 	}
 
-	int same = 0;
-	
-	if(
-		expected->consumed     == returned->consumed         &&
-		expected->payload_used == returned->payload_used &&
-		expected->rc           == returned->rc
-	){
-		
-		for(int i = 0; i < BUFLEN; i++){
-			if (expected->payload[i] != returned->payload[i])
-				return 0;
-		}
-		
-		same = 1;
+	if (expected->consumed != returned->consumed){
+		log_trace(
+			"mismatch e->consumed: %d    r->consumed: %d",
+			expected->consumed,
+			returned->consumed
+		);
+		return 0;
 	}
 	
-	return same;
+	if (expected->payload_used != returned->payload_used){
+		log_trace(
+			"mismatch e->payload_used: %d    r->payload_used: %d",
+			expected->payload_used,
+			returned->payload_used
+		);
+		return 0;
+	}
+	
+	if (expected->rc != returned->rc){
+		log_trace(
+			"mismatch e->rc: %d    r->rc: %d",
+			expected->rc,
+			returned->rc
+		);
+		return 0;
+	}
+		
+	for(int i = 0; i < BUFLEN; i++){
+		if (expected->payload[i] != returned->payload[i]){
+			log_trace(
+				"mismatch e->payload[%d]: %02x    r->payload[%d]: %02x",
+				i,
+				expected->payload[i],
+				i,
+				returned->payload[i]
+			);
+			return 0;
+		}
+	}
+	
+	return 1;
 }
