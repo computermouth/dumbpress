@@ -12,7 +12,7 @@ TESTDIR := test
 TESTS := $(patsubst $(TESTDIR)/%.bin,$(TESTDIR)/%.dp,$(wildcard $(TESTDIR)/*.bin))
 EXTRACTS := $(patsubst $(TESTDIR)/%.bin.dp,$(TESTDIR)/%.bin.dp.dp,$(wildcard $(TESTDIR)/*.bin.dp))
 
-FLAGS := -Wall -std=c99 -no-pie -pg -O3 -pedantic -DLOG_USE_COLOR
+FLAGS := -Wall -std=c99 -no-pie -pg -flto -O3 -pedantic -DLOG_USE_COLOR
 FLAGS += $(LOGLEVEL)
 LIBS :=
 
