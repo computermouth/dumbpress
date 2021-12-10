@@ -10,7 +10,7 @@
 #define AUTOPOS -1
 
 typedef struct {
-	unsigned char consumed;
+	unsigned int consumed;
 	unsigned char payload[BUFLEN];
 	unsigned char payload_used;
 	unsigned char rc;
