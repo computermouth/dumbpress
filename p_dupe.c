@@ -81,13 +81,13 @@ unit dupe(short buf[BUFLEN]){
 	}
 	
 	hit.consumed = len;
-	hit.payload[0] = len;
+	hit.payload[0] = len - 1;
 	hit.payload[1] = val;
 	hit.payload_used = 2;
 	
-	log_trace("dupe_consume -> %d", len);
-	log_trace("dupe_length  -> %d", len);
-	log_trace("dupe_value   -> %c", val);
+	log_trace("dupe_consume -> %d", hit.consumed  );
+	log_trace("dupe_length  -> %d", hit.payload[0]);
+	log_trace("dupe_value   -> %c", hit.payload[1]);
 	
 	return hit;
 }
